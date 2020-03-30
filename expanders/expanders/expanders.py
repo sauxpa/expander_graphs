@@ -4,6 +4,7 @@ import numpy as np
 from functools import lru_cache
 import scipy
 from typing import Union
+from sklearn.metrics import normalized_mutual_info_score
 
 
 def sorted_adjacency_spectrum(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray:
@@ -68,6 +69,42 @@ def is_ramanujan(spectrum: np.ndarray) -> bool:
     return np.max(np.abs(spectrum[1:])) <= alon_boppana(spectrum[0])
 
 
+def sample_random_walk(
+    P: Union[np.ndarray, scipy.sparse.csr.csr_matrix],
+    node: int,
+    walk_length: int,
+) -> np.ndarray:
+    if scipy.sparse.issparse(P):
+        P = P.A
+    path = np.empty(walk_length)
+    path[0] = node
+    n = P.shape[0]
+    for t in range(1, walk_length):
+        node = int(np.random.choice(range(n), p=P[node, :].flatten()))
+        path[t] = node
+    return path
+
+
+def mi_mixing(
+    P : Union[np.ndarray, scipy.sparse.csr.csr_matrix],
+    n_samples: int,
+    walk_length: int,
+) -> np.ndarray:
+    if scipy.sparse.issparse(P):
+        P = P.A
+    n = P.shape[0]
+    paths = np.empty((n_samples, walk_length))
+    for i in range(n_samples):
+        node = np.random.choice(range(n))
+        path = sample_random_walk(P, node, walk_length)
+        paths[i] = path
+
+    mi = np.empty(walk_length)
+    for t in range(walk_length):
+        mi[t] = normalized_mutual_info_score(paths[:, 0], paths[:, t], average_method='arithmetic')
+    return mi
+
+
 class GraphBuilder(abc.ABC):
     def __init__(
         self,
@@ -98,7 +135,6 @@ class GraphBuilder(abc.ABC):
         """
         return normalized_spectrum(self.transition_matrix)
 
-
     @property
     def is_ramanujan(self) -> bool:
         """A connected d-regular graph is said to be Ramanujan when
@@ -114,6 +150,12 @@ class GraphBuilder(abc.ABC):
     @property
     def normalized_spectral_gap(self) -> float:
         return spectral_gap(self.normalized_spectrum)
+
+    def sample_random_walk(self, node: int, walk_length: int) -> np.ndarray:
+        return sample_random_walk(self.transition_matrix, node, walk_length)
+
+    def mi_mixing(self, n_samples: int, walk_length: int) -> np.ndarray:
+        return mi_mixing(self.transition_matrix, n_samples, walk_length)
 
     @property
     def G(self) -> Union[nx.Graph, nx.MultiDiGraph]:
