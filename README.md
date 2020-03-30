@@ -3,7 +3,7 @@
 **To install** : clone repo and pip install -e expanders/
 
 
-To run the app :
+**To run the app** :
 * clone the repo
 * run bokeh serve --show expander_app/
 
