@@ -7,7 +7,7 @@
 * clone the repo
 * run bokeh serve --show expander_app/
 
-<img src="./lps3.png"
+<img src="./lps3.gif"
      alt="LPS3"
      style="float: left; margin-right: 10px;" />
      
