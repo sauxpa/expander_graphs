@@ -73,6 +73,8 @@ def sample_random_walk(
     node: int,
     walk_length: int,
 ) -> np.ndarray:
+    """Sample a standard random walk on a graph with transition matrix P.
+    """
     if scipy.sparse.issparse(P):
         P = P.A
     path = np.empty(walk_length)
@@ -89,6 +91,10 @@ def mi_mixing(
     n_samples: int,
     walk_length: int,
 ) -> np.ndarray:
+    """Compute the mutual information between X_0 uniformly distributed
+    on a graph with transition matrix P and the subsequent states X_t
+    after t steps of standard random walk starting from X_0.
+    """
     if scipy.sparse.issparse(P):
         P = P.A
     n = P.shape[0]
@@ -100,7 +106,6 @@ def mi_mixing(
 
     mi = np.empty(walk_length)
     for t in range(walk_length):
-        # mi[t] = normalized_mutual_info_score(paths[:, 0], paths[:, t], average_method='arithmetic')
         mi[t] = mutual_info_score(paths[:, 0], paths[:, t])
     return mi
 
