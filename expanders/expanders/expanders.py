@@ -4,8 +4,7 @@ import numpy as np
 from functools import lru_cache
 import scipy
 from typing import Union
-from sklearn.metrics import normalized_mutual_info_score
-
+from sklearn.metrics import mutual_info_score
 
 def sorted_adjacency_spectrum(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray:
     """Calculate adjacency spectrum of G
@@ -101,7 +100,8 @@ def mi_mixing(
 
     mi = np.empty(walk_length)
     for t in range(walk_length):
-        mi[t] = normalized_mutual_info_score(paths[:, 0], paths[:, t], average_method='arithmetic')
+        # mi[t] = normalized_mutual_info_score(paths[:, 0], paths[:, t], average_method='arithmetic')
+        mi[t] = mutual_info_score(paths[:, 0], paths[:, t])
     return mi
 
 
