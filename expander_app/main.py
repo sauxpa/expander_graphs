@@ -11,15 +11,30 @@ from bokeh.models.graphs import from_networkx
 from bokeh.layouts import row, WidgetBox
 
 # LAYOUT_SHAPE = 'HEART'
+# LAYOUT_SHAPE = 'FISH'
 LAYOUT_SHAPE = ''
 
-def r(t):
-    """Polar coordinates of the graph layout.
+
+def x_layout(t):
+    """Parametric coordinates of the graph layout, x coordinate.
     """
     if LAYOUT_SHAPE == 'HEART':
-        return (np.sin(t)*np.sqrt(np.abs(np.cos(t)))/(np.sin(t)+7/5)-2*np.sin(t)+2)
+        return (np.sin(t)*np.sqrt(np.abs(np.cos(t)))/(np.sin(t)+7/5)-2*np.sin(t)+2) * np.cos(t)
+    elif LAYOUT_SHAPE == 'FISH':
+        return np.cos(t) - np.sin(t) ** 2 / np.sqrt(2)
     else:
-        return 1.0
+        return np.cos(t)
+
+
+def y_layout(t):
+    """Parametric coordinates of the graph layout, y coordinate.
+    """
+    if LAYOUT_SHAPE == 'HEART':
+        return (np.sin(t)*np.sqrt(np.abs(np.cos(t)))/(np.sin(t)+7/5)-2*np.sin(t)+2) * np.sin(t)
+    elif LAYOUT_SHAPE == 'FISH':
+        return np.cos(t) * np.sin(t)
+    else:
+        return np.sin(t)
 
 
 def make_dataset_lps3(p, div_):
@@ -67,8 +82,8 @@ def update_lps3(attr, old, new):
 
     # 1. First update layout
     circ = [i*2*np.pi/p for i in node_indices]
-    x = np.array([r(t) * np.cos(t) for t in circ])
-    y = np.array([r(t) * np.sin(t) for t in circ])
+    x = np.array([x_layout(t) for t in circ])
+    y = np.array([y_layout(t) for t in circ])
     scale = np.max([x, y])
     x = (x - np.mean(x)) / (scale - np.mean(x))
     y = (y - np.mean(y)) / (scale - np.mean(y))
@@ -101,8 +116,8 @@ def update_paley(attr, old, new):
 
     # 1. First update layout
     circ = [i*2*np.pi/p for i in node_indices]
-    x = np.array([r(t) * np.cos(t) for t in circ])
-    y = np.array([r(t) * np.sin(t) for t in circ])
+    x = np.array([x_layout(t) for t in circ])
+    y = np.array([y_layout(t) for t in circ])
     scale = np.max([x, y])
     x = (x - np.mean(x)) / (scale - np.mean(x))
     y = (y - np.mean(y)) / (scale - np.mean(y))
@@ -153,8 +168,8 @@ graph_renderer_lps3 = from_networkx(G_lps3, nx.circular_layout, scale=1, center=
 
 node_indices_lps3 = list(range(p_lps3))
 circ = [i*2*np.pi/p_lps3 for i in node_indices_lps3]
-x = np.array([r(t) * np.cos(t) for t in circ])
-y = np.array([r(t) * np.sin(t) for t in circ])
+x = np.array([x_layout(t) for t in circ])
+y = np.array([y_layout(t) for t in circ])
 scale = np.max([x, y])
 x = (x - np.mean(x)) / (scale - np.mean(x))
 y = (y - np.mean(y)) / (scale - np.mean(y))
@@ -211,8 +226,8 @@ graph_renderer_paley = from_networkx(G_paley, nx.circular_layout, scale=1, cente
 
 node_indices_paley = list(range(p_paley))
 circ = [i*2*np.pi/p_paley for i in node_indices_paley]
-x = np.array([r(t) * np.cos(t) for t in circ])
-y = np.array([r(t) * np.sin(t) for t in circ])
+x = np.array([x_layout(t) for t in circ])
+y = np.array([y_layout(t) for t in circ])
 scale = np.max([x, y])
 x = (x - np.mean(x)) / (scale - np.mean(x))
 y = (y - np.mean(y)) / (scale - np.mean(y))
