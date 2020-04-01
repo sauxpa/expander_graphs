@@ -188,6 +188,7 @@ class GraphBuilder(abc.ABC):
         self.flush()
         self._build()
 
+    @abc.abstractmethod
     def _build(self) -> None:
         """Graph construction method to be defined in children classes.
         """
