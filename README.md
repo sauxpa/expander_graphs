@@ -19,3 +19,9 @@
      alt="Paley"
      style="float: left; margin-right: 10px;" />
      
+### Margulis
+
+<img src="./margulis.gif"
+     alt="Margulis"
+     style="float: left; margin-right: 10px;" />
+     
