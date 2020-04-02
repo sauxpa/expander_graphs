@@ -3,6 +3,7 @@ import networkx as nx
 import numpy as np
 from functools import lru_cache
 import scipy
+from scipy.stats import entropy
 from typing import Union
 from sklearn.metrics import mutual_info_score
 
@@ -86,6 +87,29 @@ def sample_random_walk(
     return path
 
 
+def entropy_mixing(
+    P : Union[np.ndarray, scipy.sparse.csr.csr_matrix],
+    n_samples: int,
+    walk_length: int,
+) -> np.ndarray:
+    """Compute the entropy evolution H(vP^t)-H(v) where P is transition matrix
+    and v a random distribution on the graph, t=1, ..., walk_length.
+    """
+    if scipy.sparse.issparse(P):
+        P = P.A
+    n = P.shape[0]
+    entropy_diff = np.zeros((n_samples, walk_length))
+    for i in range(n_samples):
+        v = np.random.random(n)
+        v /= np.sum(v)
+        initial_entropy = entropy(v)
+        Pt = np.eye(n)
+        for t in range(walk_length-1):
+            Pt = np.dot(Pt, P)
+            entropy_diff[i, t+1] = entropy(np.dot(v, Pt)) - initial_entropy
+    return np.mean(entropy_diff, axis=0)
+
+
 def mi_mixing(
     P : Union[np.ndarray, scipy.sparse.csr.csr_matrix],
     n_samples: int,
@@ -158,6 +182,9 @@ class GraphBuilder(abc.ABC):
 
     def sample_random_walk(self, node: int, walk_length: int) -> np.ndarray:
         return sample_random_walk(self.transition_matrix, node, walk_length)
+
+    def entropy_mixing(self, n_samples: int, walk_length: int) -> np.ndarray:
+        return entropy_mixing(self.transition_matrix, n_samples, walk_length)
 
     def mi_mixing(self, n_samples: int, walk_length: int) -> np.ndarray:
         return mi_mixing(self.transition_matrix, n_samples, walk_length)
