@@ -78,6 +78,10 @@ class Margulis(GraphBuilder):
             self._G.add_edge((x, y), (x, (y + 2 * x + 1) % self.n))
             self._G.add_edge((x, y), (x, (y - 2 * x - 1) % self.n))
 
+        # Rebrand nodes
+        mapping = dict(zip(itertools.product(range(self.n), repeat=2), range(self.n ** 2)))
+        self._G = nx.relabel_nodes(self._G, mapping)
+
         if self.remove_parallel_edges:
             self._G = nx.Graph(self._G)
             if self.remove_self_edges:
