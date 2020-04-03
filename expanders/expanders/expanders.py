@@ -16,11 +16,11 @@ def sorted_adjacency_spectrum(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray
     return np.real(_spectrum[idx])
 
 
-def normalized_spectrum(P: scipy.sparse.csr.csr_matrix) -> np.ndarray:
+def normalized_spectrum(P: np.ndarray) -> np.ndarray:
     """Calculate the transition matrix spectrum. For d-regular graph, this is
     equivalent to scaling the adjacency spectrum by 1/d.
     """
-    _spectrum, _ = np.linalg.eig(P.A)
+    _spectrum, _ = np.linalg.eig(P)
     idx = _spectrum.argsort()[::-1]
     return np.real(_spectrum[idx])
 
@@ -36,23 +36,23 @@ def spectral_gap(spectrum: np.ndarray) -> float:
     return spectrum[0] - spectrum[1]
 
 
-def transition_matrix(G: Union[nx.Graph, nx.MultiDiGraph]) -> scipy.sparse.csr.csr_matrix:
+def transition_matrix(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray:
     """Compute the transition matrix of the Markov standard
     random walk on graph G, i.e D^-1 * A where
     A is the adjacency matrix, D the diagonal matrix of degrees.
     """
-    A = nx.adjacency_matrix(G)
-    D = scipy.sparse.diags(1/A.dot(np.ones(A.shape[0])))
+    A = nx.adjacency_matrix(G).A
+    D = np.diag(1/A.dot(np.ones(A.shape[0])))
     return D.dot(A)
 
 
-def invariant_distribution(P: scipy.sparse.csr.csr_matrix) -> np.ndarray:
+def invariant_distribution(P: np.ndarray) -> np.ndarray:
     """Compute an invariant measure of transition matrix P i.e a left eigenvector
     associated with eigenvalue 1 (or equivalently an eigenvector of P.T for the same
     eigenvalue, the existence of which is guaranted by Perron-Frobenius theorem.)
     Returns the invariant probability distribution, i.e the normalized eigenvector.
     """
-    eigenvalues, eigenvectors = scipy.sparse.linalg.eigs(P.T, k=3)
+    eigenvalues, eigenvectors = np.linalg.eig(P.T)
     idx = eigenvalues.argsort()[::-1]
     eigenvalues = np.real(eigenvalues[idx])
     eigenvectors = np.real(eigenvectors[:, idx])
@@ -69,15 +69,49 @@ def is_ramanujan(spectrum: np.ndarray) -> bool:
     return np.max(np.abs(spectrum[1:])) <= alon_boppana(spectrum[0])
 
 
+def mixing_errors(
+    P: np.ndarray,
+    mu: np.ndarray,
+    walk_length: int,
+    n_samples: int=-1,
+    mixing_metric: Union[int, str]=1,
+) -> np.ndarray:
+    """Compute the mixing_metric-norm of the difference
+    v*P^t-mu, where
+    P: transition matrix,
+    mu: assumed to be the invariant distribution of P,
+    v: any distribution
+        (Dirac on each of the nodes if n_sample<=0,
+        n_samples random distributions otherwise),
+    t: 1, ..., walk_length.
+    """
+    n = P.shape[0]
+    Pt = np.eye(n)
+    mixing_err = np.empty(walk_length)
+
+    if n_samples <= 0:
+        P_inf = np.repeat(mu.reshape(1, -1), n, axis=0)
+        for t in range(walk_length):
+            mixing_err[t] = np.linalg.norm(Pt - P_inf, ord=mixing_metric)
+            Pt = Pt.dot(P)
+    else:
+        P_inf = np.repeat(mu.reshape(1, -1), n_samples, axis=0)
+        V = np.random.random((n, n_samples))
+        V /= np.sum(V, axis=0)
+        V = V.T
+        for t in range(walk_length):
+            mixing_err[t] = np.linalg.norm(V.dot(Pt) - P_inf, ord=mixing_metric)
+            Pt = Pt.dot(P)
+    return mixing_err
+
+
 def sample_random_walk(
-    P: Union[np.ndarray, scipy.sparse.csr.csr_matrix],
+    P: np.ndarray,
     node: int,
     walk_length: int,
 ) -> np.ndarray:
     """Sample a standard random walk on a graph with transition matrix P.
     """
-    if scipy.sparse.issparse(P):
-        P = P.A
     path = np.empty(walk_length)
     path[0] = node
     n = P.shape[0]
@@ -88,39 +122,51 @@ def sample_random_walk(
 
 
 def entropy_mixing(
-    P : Union[np.ndarray, scipy.sparse.csr.csr_matrix],
-    n_samples: int,
+    P : np.ndarray,
     walk_length: int,
+    n_samples: int=-1,
 ) -> np.ndarray:
-    """Compute the entropy evolution H(vP^t)-H(v) where P is transition matrix
-    and v a random distribution on the graph, t=1, ..., walk_length.
+    """Compute the entropy evolution H(vP^t)-H(v) where
+    P: transition matrix,
+    v: any distribution
+        (Dirac on each of the nodes if n_sample<=0,
+        n_samples random distributions otherwise),
+    t: 1, ..., walk_length.
     """
-    if scipy.sparse.issparse(P):
-        P = P.A
     n = P.shape[0]
-    entropy_diff = np.zeros((n_samples, walk_length))
-    for i in range(n_samples):
-        v = np.random.random(n)
-        v /= np.sum(v)
-        initial_entropy = entropy(v)
-        Pt = np.eye(n)
-        for t in range(walk_length-1):
-            Pt = np.dot(Pt, P)
-            entropy_diff[i, t+1] = entropy(np.dot(v, Pt)) - initial_entropy
+
+    if n_samples <= 0:
+        entropy_diff = np.zeros((n, walk_length))
+        V = np.eye(n)
+        for i in range(n):
+            v = V[i, :]
+            initial_entropy = entropy(v)
+            Pt = np.eye(n)
+            for t in range(walk_length-1):
+                Pt = np.dot(Pt, P)
+                entropy_diff[i, t+1] = entropy(np.dot(v, Pt)) - initial_entropy
+    else:
+        entropy_diff = np.zeros((n_samples, walk_length))
+        for i in range(n_samples):
+            v = np.random.random(n)
+            v /= np.sum(v)
+            initial_entropy = entropy(v)
+            Pt = np.eye(n)
+            for t in range(walk_length-1):
+                Pt = np.dot(Pt, P)
+                entropy_diff[i, t+1] = entropy(np.dot(v, Pt)) - initial_entropy
     return np.mean(entropy_diff, axis=0)
 
 
 def mi_mixing(
-    P : Union[np.ndarray, scipy.sparse.csr.csr_matrix],
-    n_samples: int,
+    P : np.ndarray,
     walk_length: int,
+    n_samples: int,
 ) -> np.ndarray:
     """Compute the mutual information between X_0 uniformly distributed
     on a graph with transition matrix P and the subsequent states X_t
     after t steps of standard random walk starting from X_0.
     """
-    if scipy.sparse.issparse(P):
-        P = P.A
     n = P.shape[0]
     paths = np.empty((n_samples, walk_length))
     for i in range(n_samples):
@@ -183,11 +229,15 @@ class GraphBuilder(abc.ABC):
     def sample_random_walk(self, node: int, walk_length: int) -> np.ndarray:
         return sample_random_walk(self.transition_matrix, node, walk_length)
 
-    def entropy_mixing(self, n_samples: int, walk_length: int) -> np.ndarray:
-        return entropy_mixing(self.transition_matrix, n_samples, walk_length)
+    def mixing_errors(self, walk_length: int, n_samples: int=-1, mixing_metric: Union[int, str]=1) -> np.ndarray:
+        return mixing_errors(self.transition_matrix, self.invariant_distribution, walk_length, n_samples, mixing_metric)
 
-    def mi_mixing(self, n_samples: int, walk_length: int) -> np.ndarray:
-        return mi_mixing(self.transition_matrix, n_samples, walk_length)
+    def entropy_mixing(self, walk_length: int, n_samples: int=-1) -> np.ndarray:
+        return entropy_mixing(self.transition_matrix, walk_length, n_samples)
+
+    def mi_mixing(self, walk_length: int, n_samples: int) -> np.ndarray:
+        return mi_mixing(self.transition_matrix, walk_length, n_samples)
+
 
     @property
     def G(self) -> Union[nx.Graph, nx.MultiDiGraph]:
@@ -197,7 +247,7 @@ class GraphBuilder(abc.ABC):
 
     @property
     @lru_cache(maxsize=None)
-    def transition_matrix(self) -> scipy.sparse.csr.csr_matrix:
+    def transition_matrix(self) -> np.ndarray:
         """Calculate and cache transition matrix.
         """
         return transition_matrix(self.G)
