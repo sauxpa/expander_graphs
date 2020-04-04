@@ -111,11 +111,13 @@ class LPS(GraphBuilder):
         assert sympy.isprime(p), '{} is not prime'.format(p)
         assert p % 4 == 1, '{} != 1 mod 4'.format(p)
 
-    def check_q(self, q: int) -> None:
+    def check_q(self, q: int, p: int=None) -> None:
         """Assert whether q is a square mod p and has residue 1 mod 4.
         """
+        if not p:
+            p = self.p
         assert q % 4 == 1, '{} != 1 mod 4'.format(q)
-        assert sympy.is_quad_residue(q, self.p), '{} must be a square mod {}'.format(q, self.p)
+        assert sympy.is_quad_residue(q, p), '{} must be a square mod {}'.format(q, p)
 
     @property
     def p(self) -> int:
