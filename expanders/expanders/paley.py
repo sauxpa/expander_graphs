@@ -4,16 +4,6 @@ import sympy
 from .expanders import GraphBuilder
 from .finite_fields import FiniteField
 
-def check_q(q: int) -> None:
-    """Assert whether q is prime power.
-    """
-    assert q % 4 == 1, '{} != 1 mod 4'.format(q)
-    if not sympy.isprime(q):
-        split_power = sympy.perfect_power(q)
-        assert split_power, '{} is not a power'.format(q)
-        p, _ = split_power
-        assert sympy.isprime(p), '{} is not prime'.format(p)
-
 
 class Paley(GraphBuilder):
     """Paley strongly regular dense graph.
@@ -27,17 +17,27 @@ class Paley(GraphBuilder):
         self,
         q: int,
     ) -> None:
-        check_q(q)
+        self.check_q(q)
         self._q = q
 
         super().__init__()
+
+    def check_q(self, q: int) -> None:
+        """Assert whether q is prime power.
+        """
+        assert q % 4 == 1, '{} != 1 mod 4'.format(q)
+        if not sympy.isprime(q):
+            split_power = sympy.perfect_power(q)
+            assert split_power, '{} is not a power'.format(q)
+            p, _ = split_power
+            assert sympy.isprime(p), '{} is not prime'.format(p)
 
     @property
     def q(self) -> int:
         return self._q
     @q.setter
     def q(self, new_q: int) -> None:
-        check_q(new_q)
+        self.check_q(new_q)
         self.flush()
         self._q = new_q
 
