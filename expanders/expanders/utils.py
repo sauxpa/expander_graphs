@@ -17,7 +17,8 @@ def graphviz_image(G, fname=None, inline=True):
         ax.axis('off')
         plt.show()
     else:
-        inage.show()
+        image.show()
+
 
 def profile_cache():
     """Elementary speedup check due to caching in GraphBuilder.
@@ -34,16 +35,16 @@ def profile_cache():
 
     start_time = time.time()
     builder.spectrum
-    elapsed_time = time.time() - start_time
-    print('First call: {:.2f}ms'.format(elapsed_time*1e3))
+    elapsed = time.time() - start_time
+    print('First call: {:.2f}ms'.format(elapsed * 1e3))
 
     start_time = time.time()
     builder.spectrum
-    elapsed_time = time.time() - start_time
-    print('Second call: {:.2f}ms'.format(elapsed_time*1e3))
+    elapsed = time.time() - start_time
+    print('Second call: {:.2f}ms'.format(elapsed * 1e3))
 
     start_time = time.time()
     builder.p = sympy.nextprime(builder.p)
     builder.spectrum
-    elapsed_time = time.time() - start_time
-    print('First call after changing parameter: {:.2f}ms'.format(elapsed_time*1e3))
+    elapsed = time.time() - start_time
+    print('First call after changing p: {:.2f}ms'.format(elapsed * 1e3))

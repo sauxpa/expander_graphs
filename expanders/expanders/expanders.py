@@ -2,12 +2,14 @@ import abc
 import networkx as nx
 import numpy as np
 from functools import lru_cache
-import scipy
 from scipy.stats import entropy
 from typing import Union
 from sklearn.metrics import mutual_info_score
 
-def sorted_adjacency_spectrum(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray:
+
+def sorted_adjacency_spectrum(
+    G: Union[nx.Graph, nx.MultiDiGraph]
+) -> np.ndarray:
     """Calculate adjacency spectrum of G
     (sorted in decreasing order).
     """
@@ -25,7 +27,7 @@ def normalized_spectrum(P: np.ndarray) -> np.ndarray:
     return np.real(_spectrum[idx])
 
 
-def alon_boppana(d: int, normalized: bool=False) -> float:
+def alon_boppana(d: int, normalized: bool = False) -> float:
     if normalized:
         return 2*np.sqrt(d-1)/d
     else:
@@ -47,10 +49,12 @@ def transition_matrix(G: Union[nx.Graph, nx.MultiDiGraph]) -> np.ndarray:
 
 
 def invariant_distribution(P: np.ndarray) -> np.ndarray:
-    """Compute an invariant measure of transition matrix P i.e a left eigenvector
-    associated with eigenvalue 1 (or equivalently an eigenvector of P.T for the same
-    eigenvalue, the existence of which is guaranted by Perron-Frobenius theorem.)
-    Returns the invariant probability distribution, i.e the normalized eigenvector.
+    """Compute an invariant measure of transition matrix P i.e a left
+    eigenvector associated with eigenvalue 1 (or equivalently an eigenvector of
+    P.T for the same eigenvalue, the existence of which is guaranted by
+    Perron-Frobenius theorem.)
+    Returns the invariant probability distribution, i.e the normalized
+    eigenvector.
     """
     eigenvalues, eigenvectors = np.linalg.eig(P.T)
     idx = eigenvalues.argsort()[::-1]
@@ -64,7 +68,8 @@ def invariant_distribution(P: np.ndarray) -> np.ndarray:
 def is_ramanujan(spectrum: np.ndarray) -> bool:
     """A connected d-regular graph is said to be Ramanujan when
     max_{i>=2} |lambda_i| <= 2*sqrt(d-1),
-    where d = lambda_1 >= lambda_2 >= ... >= lambda_n are the adjacency eigenvalues.
+    where d = lambda_1 >= lambda_2 >= ... >= lambda_n are the adjacency
+    eigenvalues.
     """
     return np.max(np.abs(spectrum[1:])) <= alon_boppana(spectrum[0])
 
@@ -73,8 +78,8 @@ def mixing_errors(
     P: np.ndarray,
     mu: np.ndarray,
     walk_length: int,
-    n_samples: int=-1,
-    mixing_metric: Union[int, str]=1,
+    n_samples: int = -1,
+    mixing_metric: Union[int, str] = 1,
 ) -> np.ndarray:
     """Compute the mixing_metric-norm of the difference
     v*P^t-mu, where
@@ -100,7 +105,9 @@ def mixing_errors(
         V /= np.sum(V, axis=0)
         V = V.T
         for t in range(walk_length):
-            mixing_err[t] = np.linalg.norm(V.dot(Pt) - P_inf, ord=mixing_metric)
+            mixing_err[t] = np.linalg.norm(V.dot(Pt) - P_inf,
+                                           ord=mixing_metric
+                                           )
             Pt = Pt.dot(P)
     return mixing_err
 
@@ -122,9 +129,9 @@ def sample_random_walk(
 
 
 def entropy_mixing(
-    P : np.ndarray,
+    P: np.ndarray,
     walk_length: int,
-    n_samples: int=-1,
+    n_samples: int = -1,
 ) -> np.ndarray:
     """Compute the entropy evolution H(vP^t)-H(v) where
     P: transition matrix,
@@ -159,7 +166,7 @@ def entropy_mixing(
 
 
 def mi_mixing(
-    P : np.ndarray,
+    P: np.ndarray,
     walk_length: int,
     n_samples: int,
 ) -> np.ndarray:
@@ -214,7 +221,8 @@ class GraphBuilder(abc.ABC):
     def is_ramanujan(self) -> bool:
         """A connected d-regular graph is said to be Ramanujan when
         max_{i>=2} |lambda_i| <= 2*sqrt(d-1),
-        where d = lambda_1 >= lambda_2 >= ... >= lambda_n are the adjacency eigenvalues.
+        where d = lambda_1 >= lambda_2 >= ... >= lambda_n are the adjacency
+        eigenvalues.
         """
         return is_ramanujan(self.spectrum)
 
@@ -229,15 +237,25 @@ class GraphBuilder(abc.ABC):
     def sample_random_walk(self, node: int, walk_length: int) -> np.ndarray:
         return sample_random_walk(self.transition_matrix, node, walk_length)
 
-    def mixing_errors(self, walk_length: int, n_samples: int=-1, mixing_metric: Union[int, str]=1) -> np.ndarray:
-        return mixing_errors(self.transition_matrix, self.invariant_distribution, walk_length, n_samples, mixing_metric)
+    def mixing_errors(self, walk_length: int,
+                      n_samples: int = -1,
+                      mixing_metric: Union[int, str] = 1,
+                      ) -> np.ndarray:
+        return mixing_errors(self.transition_matrix,
+                             self.invariant_distribution,
+                             walk_length,
+                             n_samples,
+                             mixing_metric
+                             )
 
-    def entropy_mixing(self, walk_length: int, n_samples: int=-1) -> np.ndarray:
+    def entropy_mixing(self,
+                       walk_length: int,
+                       n_samples: int = -1
+                       ) -> np.ndarray:
         return entropy_mixing(self.transition_matrix, walk_length, n_samples)
 
     def mi_mixing(self, walk_length: int, n_samples: int) -> np.ndarray:
         return mi_mixing(self.transition_matrix, walk_length, n_samples)
-
 
     @property
     def G(self) -> Union[nx.Graph, nx.MultiDiGraph]:

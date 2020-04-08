@@ -1,15 +1,14 @@
 import networkx as nx
-import numpy as np
 from .expanders import GraphBuilder
 
 
 class RRG(GraphBuilder):
     """Random Regular Graphself.
     Friedman showed in 2003 (https://arxiv.org/pdf/cs/0405020.pdf) that
-    random regular graphs drawn from the uniform distribution are almost Ramanujan,
-    in the sense that :
-    for all eps>0, max_{i>=2} |lambda_i| <= 2*sqrt(d-1) + eps with probability 1-o(1)
-    when n -> infty.
+    random regular graphs drawn from the uniform distribution are almost
+    Ramanujan, in the sense that :
+    for all eps>0, max_{i>=2} |lambda_i| <= 2*sqrt(d-1) + eps
+    with probability 1-o(1) when n -> infty.
     """
     def __init__(
         self,
@@ -26,6 +25,7 @@ class RRG(GraphBuilder):
     @property
     def d(self) -> int:
         return self._d
+
     @d.setter
     def d(self, new_d: int) -> None:
         self.flush()
@@ -34,6 +34,7 @@ class RRG(GraphBuilder):
     @property
     def n(self) -> int:
         return self._n
+
     @n.setter
     def n(self, new_n: int) -> None:
         self.flush()

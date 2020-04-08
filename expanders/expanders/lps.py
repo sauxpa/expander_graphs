@@ -1,5 +1,4 @@
 import networkx as nx
-import numpy as np
 import sympy
 from sympy.solvers.diophantine import power_representation
 from sympy.utilities.iterables import signed_permutations
@@ -17,8 +16,8 @@ class LPS3(GraphBuilder):
     def __init__(
         self,
         p: int,
-        remove_parallel_edges: bool=False,
-        remove_self_edges: bool=False,
+        remove_parallel_edges: bool = False,
+        remove_self_edges: bool = False,
     ) -> None:
         self.check_p(p)
         self._p = p
@@ -35,6 +34,7 @@ class LPS3(GraphBuilder):
     @property
     def p(self) -> int:
         return self._p
+
     @p.setter
     def p(self, new_p: int) -> None:
         self.check_p(new_p)
@@ -44,6 +44,7 @@ class LPS3(GraphBuilder):
     @property
     def remove_parallel_edges(self) -> bool:
         return self._remove_parallel_edges
+
     @remove_parallel_edges.setter
     def remove_parallel_edges(self, new_remove_parallel_edges: int) -> None:
         self.flush()
@@ -52,6 +53,7 @@ class LPS3(GraphBuilder):
     @property
     def remove_self_edges(self) -> bool:
         return self._remove_self_edges
+
     @remove_self_edges.setter
     def remove_self_edges(self, new_remove_self_edges: int) -> None:
         self.flush()
@@ -90,8 +92,8 @@ class LPS(GraphBuilder):
         self,
         p: int,
         q: int,
-        remove_parallel_edges: bool=False,
-        remove_self_edges: bool=False,
+        remove_parallel_edges: bool = False,
+        remove_self_edges: bool = False,
     ) -> None:
         self.check_p(p)
         self._p = p
@@ -102,7 +104,6 @@ class LPS(GraphBuilder):
         self._remove_parallel_edges = remove_parallel_edges
         self._remove_self_edges = remove_self_edges
 
-
         super().__init__()
 
     def check_p(self, p: int) -> None:
@@ -111,17 +112,22 @@ class LPS(GraphBuilder):
         assert sympy.isprime(p), '{} is not prime'.format(p)
         assert p % 4 == 1, '{} != 1 mod 4'.format(p)
 
-    def check_q(self, q: int, p: int=None) -> None:
+    def check_q(self, q: int, p: int = None) -> None:
         """Assert whether q is a square mod p and has residue 1 mod 4.
         """
         if not p:
             p = self.p
-        assert q % 4 == 1, '{} != 1 mod 4'.format(q)
-        assert sympy.is_quad_residue(q, p), '{} must be a square mod {}'.format(q, p)
+
+        msg = '{} != 1 mod 4'.format(q)
+        assert q % 4 == 1, msg
+
+        msg = '{} must be a square mod {}'.format(q, p)
+        assert sympy.is_quad_residue(q, p), msg
 
     @property
     def p(self) -> int:
         return self._p
+
     @p.setter
     def p(self, new_p: int) -> None:
         self.check_p(new_p)
@@ -131,6 +137,7 @@ class LPS(GraphBuilder):
     @property
     def q(self) -> int:
         return self._q
+
     @q.setter
     def q(self, new_q: int) -> None:
         self.check_q(new_q)
@@ -140,6 +147,7 @@ class LPS(GraphBuilder):
     @property
     def remove_parallel_edges(self) -> bool:
         return self._remove_parallel_edges
+
     @remove_parallel_edges.setter
     def remove_parallel_edges(self, new_remove_parallel_edges: int) -> None:
         self.flush()
@@ -148,6 +156,7 @@ class LPS(GraphBuilder):
     @property
     def remove_self_edges(self) -> bool:
         return self._remove_self_edges
+
     @remove_self_edges.setter
     def remove_self_edges(self, new_remove_self_edges: int) -> None:
         self.flush()
@@ -184,9 +193,14 @@ class LPS(GraphBuilder):
         """
         self._G = nx.MultiDiGraph()
 
-        # Compute solutions to the four squares decomposition problem and retain
-        # only the ones eligible for the LPS construction.
-        four_squares = set([sol for x in power_representation(self.p, 2, 4, zeros=True) for sol in signed_permutations(x) if self.eligible_solution(sol)])
+        # Compute solutions to the four squares decomposition problem and
+        # retain only the ones eligible for the LPS construction.
+        four_squares = set(
+            [
+                s for x in power_representation(self.p, 2, 4, zeros=True)
+                for s in signed_permutations(x) if self.eligible_solution(s)
+                ]
+            )
 
         i = self.find_square_root(-1)
 
@@ -208,9 +222,13 @@ class LPS(GraphBuilder):
             num = (a + i*b) % self.q
             den = (i*d - c) % self.q
             if den == 0:
-                self._G.add_edge(self.infinity_point, self.infinity_point)
+                self._G.add_edge(
+                    self.infinity_point, self.infinity_point
+                    )
             else:
-                self._G.add_edge(self.infinity_point, num * self.modular_inv(den))
+                self._G.add_edge(
+                    self.infinity_point, num * self.modular_inv(den)
+                    )
 
         if self.remove_parallel_edges:
             self._G = nx.Graph(self._G)

@@ -1,5 +1,4 @@
 import networkx as nx
-import numpy as np
 import sympy
 from .expanders import GraphBuilder
 from .finite_fields import FiniteField
@@ -35,6 +34,7 @@ class Paley(GraphBuilder):
     @property
     def q(self) -> int:
         return self._q
+
     @q.setter
     def q(self, new_q: int) -> None:
         self.check_q(new_q)
@@ -71,19 +71,19 @@ class Paley(GraphBuilder):
             self._G.add_nodes_from(range(self.q))
             for x in range(self.q):
                 for y in square_list:
-                   self._G.add_edge(x, (x + y) % self.q)
+                    self._G.add_edge(x, (x + y) % self.q)
         else:
-            #... otherwise, q is a prime power and we need to count squares in
+            # ... otherwise, q is a prime power and we need to count squares in
             # the finite field F_q.
             ff = FiniteField(self.p, self.n)
-            square_list = [(ff.power(x, 2)) for x in ff.field if len(x) > 0]
-            # Cannot hash list so cannot do set(list of list), so use this trick
-            # to uniquify,
-            square_list = [list(x2) for x2 in set(tuple(x2) for x2 in square_list)]
+            sq_list = [(ff.power(x, 2)) for x in ff.field if len(x) > 0]
+            # Cannot hash list so cannot do set(list of list),
+            # so use this trick to uniquify,
+            sq_list = [list(x2) for x2 in set(tuple(x2) for x2 in sq_list)]
 
             self._G.add_nodes_from(range(self.q))
             for x in range(self.q):
-                for y in square_list:
+                for y in sq_list:
                     self._G.add_edge(x, ff.field.index(ff.add(ff.field[x], y)))
 
         self._G = nx.Graph(self._G)

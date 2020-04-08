@@ -3,6 +3,7 @@ import numpy as np
 import itertools
 from .expanders import GraphBuilder
 
+
 class Margulis(GraphBuilder):
     """Margulis degree 8 construction.
     Take the discrete torus (Z/nZ) x (Z/nZ) as the set of vertices,
@@ -16,9 +17,9 @@ class Margulis(GraphBuilder):
     def __init__(
         self,
         n: int,
-        remove_parallel_edges: bool=False,
-        remove_self_edges: bool=False,
-        ) -> None:
+        remove_parallel_edges: bool = False,
+        remove_self_edges: bool = False,
+    ) -> None:
         self._n = n
         self._remove_parallel_edges = remove_parallel_edges
         self._remove_self_edges = remove_self_edges
@@ -28,15 +29,17 @@ class Margulis(GraphBuilder):
     @property
     def n(self) -> int:
         return self._n
+
     @n.setter
     def n(self, new_n: int) -> None:
-        check_n(new_n)
+        self.check_n(new_n)
         self.flush()
         self._n = new_n
 
     @property
     def remove_parallel_edges(self) -> bool:
         return self._remove_parallel_edges
+
     @remove_parallel_edges.setter
     def remove_parallel_edges(self, new_remove_parallel_edges: int) -> None:
         self.flush()
@@ -45,6 +48,7 @@ class Margulis(GraphBuilder):
     @property
     def remove_self_edges(self) -> bool:
         return self._remove_self_edges
+
     @remove_self_edges.setter
     def remove_self_edges(self, new_remove_self_edges: int) -> None:
         self.flush()
@@ -79,7 +83,9 @@ class Margulis(GraphBuilder):
             self._G.add_edge((x, y), (x, (y - 2 * x - 1) % self.n))
 
         # Rebrand nodes
-        mapping = dict(zip(itertools.product(range(self.n), repeat=2), range(self.n ** 2)))
+        mapping = dict(
+            zip(itertools.product(range(self.n), repeat=2), range(self.n ** 2))
+            )
         self._G = nx.relabel_nodes(self._G, mapping)
 
         if self.remove_parallel_edges:
