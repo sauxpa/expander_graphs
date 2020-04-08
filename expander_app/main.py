@@ -2,13 +2,14 @@ import numpy as np
 import pandas as pd
 import sympy
 import networkx as nx
-from expanders import *
-
+from expanders import LPS3, Paley, Margulis
 from bokeh.io import curdoc
-from bokeh.models import ColumnDataSource, Panel, Plot, Range1d, StaticLayoutProvider
+from bokeh.models import ColumnDataSource, Panel, Plot, \
+    Range1d, StaticLayoutProvider
 from bokeh.models.widgets import Slider, Tabs, Div
 from bokeh.models.graphs import from_networkx
 from bokeh.layouts import row, WidgetBox
+
 
 # LAYOUT_SHAPE = 'HEART'
 # LAYOUT_SHAPE = 'FISH'
@@ -19,7 +20,11 @@ def x_layout(t):
     """Parametric coordinates of the graph layout, x coordinate.
     """
     if LAYOUT_SHAPE == 'HEART':
-        return (np.sin(t)*np.sqrt(np.abs(np.cos(t)))/(np.sin(t)+7/5)-2*np.sin(t)+2) * np.cos(t)
+        return (
+            np.sin(t) * np.sqrt(
+                np.abs(np.cos(t))
+                ) / (np.sin(t) + 7 / 5) - 2 * np.sin(t) + 2
+            ) * np.cos(t)
     elif LAYOUT_SHAPE == 'FISH':
         return np.cos(t) - np.sin(t) ** 2 / np.sqrt(2)
     else:
@@ -30,7 +35,11 @@ def y_layout(t):
     """Parametric coordinates of the graph layout, y coordinate.
     """
     if LAYOUT_SHAPE == 'HEART':
-        return (np.sin(t)*np.sqrt(np.abs(np.cos(t)))/(np.sin(t)+7/5)-2*np.sin(t)+2) * np.sin(t)
+        return (
+            np.sin(t) * np.sqrt(
+                np.abs(np.cos(t))
+                ) / (np.sin(t) + 7 / 5) - 2 * np.sin(t) + 2
+            ) * np.sin(t)
     elif LAYOUT_SHAPE == 'FISH':
         return np.cos(t) * np.sin(t)
     else:
@@ -44,7 +53,11 @@ def make_dataset_lps3(p, div_):
     builder.build()
     df = nx.to_pandas_edgelist(builder.G)
 
-    params_text = '<b>Parameters:</b><br><ul><li>p = {}</li> <li>Number of nodes = {}</li> <li>Number of edges = {}</li></ul>'.format(p, builder.G.number_of_nodes(), builder.G.number_of_edges())
+    params_text = '<b>Parameters:</b><br><ul>\
+    <li>p = {}</li>\
+    <li>Number of nodes = {}</li>\
+    <li>Number of edges = {}</li>\
+    </ul>'.format(p, builder.G.number_of_nodes(), builder.G.number_of_edges())
     div_.text = params_text
 
     # Convert dataframe to column data source#
@@ -58,7 +71,11 @@ def make_dataset_paley(p, div_):
     builder.build()
     df = nx.to_pandas_edgelist(builder.G)
 
-    params_text = '<b>Parameters:</b><br><ul><li>p = {}</li> <li>Number of nodes = {}</li> <li>Number of edges = {}</li></ul>'.format(p, builder.G.number_of_nodes(), builder.G.number_of_edges())
+    params_text = '<b>Parameters:</b><br><ul>\
+    <li>p = {}</li>\
+    <li>Number of nodes = {}</li>\
+    <li>Number of edges = {}</li>\
+    </ul>'.format(p, builder.G.number_of_nodes(), builder.G.number_of_edges())
     div_.text = params_text
 
     # Convert dataframe to column data source#
@@ -72,7 +89,11 @@ def make_dataset_margulis(m, div_):
     builder.build()
     df = nx.to_pandas_edgelist(builder.G)
 
-    params_text = '<b>Parameters:</b><br><ul><li>n = {}</li> <li>Number of nodes = {}</li> <li>Number of edges = {}</li></ul>'.format(m, builder.G.number_of_nodes(), builder.G.number_of_edges())
+    params_text = '<b>Parameters:</b><br><ul>\
+    <li>n = {}</li>\
+    <li>Number of nodes = {}</li>\
+    <li>Number of edges = {}</li>\
+    </ul>'.format(m, builder.G.number_of_nodes(), builder.G.number_of_edges())
     div_.text = params_text
 
     # Convert dataframe to column data source#
@@ -103,14 +124,17 @@ def update_lps3(attr, old, new):
     y = (y - np.mean(y)) / (scale - np.mean(y))
 
     graph_layout = dict(zip(node_indices, zip(x, y)))
-    graph_renderer_lps3.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+    graph_renderer_lps3.layout_provider = StaticLayoutProvider(
+        graph_layout=graph_layout
+        )
 
     # 2. Then update nodes and edges
-    new_data_edge = {'start': src_lps3.data['source'], 'end': src_lps3.data['target']};
-    # new_data_nodes = {'index': src.data['index']};
-    new_data_nodes = {'index': node_indices};
-    graph_renderer_lps3.edge_renderer.data_source.data = new_data_edge;
-    graph_renderer_lps3.node_renderer.data_source.data = new_data_nodes;
+    new_data_edge = {
+        'start': src_lps3.data['source'],
+        'end': src_lps3.data['target']}
+    new_data_nodes = {'index': node_indices}
+    graph_renderer_lps3.edge_renderer.data_source.data = new_data_edge
+    graph_renderer_lps3.node_renderer.data_source.data = new_data_nodes
 
 
 def update_paley(attr, old, new):
@@ -137,14 +161,18 @@ def update_paley(attr, old, new):
     y = (y - np.mean(y)) / (scale - np.mean(y))
 
     graph_layout = dict(zip(node_indices, zip(x, y)))
-    graph_renderer_paley.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+    graph_renderer_paley.layout_provider = StaticLayoutProvider(
+        graph_layout=graph_layout
+        )
 
     # 2. Then update nodes and edges
-    new_data_edge = {'start': src_paley.data['source'], 'end': src_paley.data['target']};
-    # new_data_nodes = {'index': src.data['index']};
-    new_data_nodes = {'index': node_indices};
-    graph_renderer_paley.edge_renderer.data_source.data = new_data_edge;
-    graph_renderer_paley.node_renderer.data_source.data = new_data_nodes;
+    new_data_edge = {
+        'start': src_paley.data['source'],
+        'end': src_paley.data['target']
+        }
+    new_data_nodes = {'index': node_indices}
+    graph_renderer_paley.edge_renderer.data_source.data = new_data_edge
+    graph_renderer_paley.node_renderer.data_source.data = new_data_nodes
 
 
 def update_margulis(attr, old, new):
@@ -170,20 +198,23 @@ def update_margulis(attr, old, new):
     y = (y - np.mean(y)) / (scale - np.mean(y))
 
     graph_layout = dict(zip(node_indices, zip(x, y)))
-    graph_renderer_margulis.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+    graph_renderer_margulis.layout_provider = StaticLayoutProvider(
+        graph_layout=graph_layout
+        )
 
     # 2. Then update nodes and edges
-    new_data_edge = {'start': src_margulis.data['source'], 'end': src_margulis.data['target']};
-    new_data_nodes = {'index': node_indices};
-    graph_renderer_margulis.edge_renderer.data_source.data = new_data_edge;
-    graph_renderer_margulis.node_renderer.data_source.data = new_data_nodes;
+    new_data_edge = {
+        'start': src_margulis.data['source'],
+        'end': src_margulis.data['target']
+        }
+    new_data_nodes = {'index': node_indices}
+    graph_renderer_margulis.edge_renderer.data_source.data = new_data_edge
+    graph_renderer_margulis.node_renderer.data_source.data = new_data_nodes
+
 
 ######################################################################
-###
-### Lubotsky-Phillips-Sarnak 3-regular
-###
+# Lubotsky-Phillips-Sarnak 3-regular
 ######################################################################
-
 # Slider to select p
 p_select_lps3 = Slider(start=2,
                        end=200,
@@ -204,13 +235,17 @@ src_lps3 = make_dataset_lps3(p_lps3, div_lps3)
 
 plot_lps3 = Plot(plot_width=600,
                  plot_height=600,
-                 x_range=Range1d(-1.1,1.1),
-                 y_range=Range1d(-1.1,1.1)
+                 x_range=Range1d(-1.1, 1.1),
+                 y_range=Range1d(-1.1, 1.1)
                  )
 
 plot_lps3.title.text = 'Lubotsky-Phillips-Sarnak 3-regular graphs'
 G_lps3 = nx.from_pandas_edgelist(pd.DataFrame(src_lps3.data))
-graph_renderer_lps3 = from_networkx(G_lps3, nx.circular_layout, scale=1, center=(0,0))
+graph_renderer_lps3 = from_networkx(G_lps3,
+                                    nx.circular_layout,
+                                    scale=1,
+                                    center=(0, 0)
+                                    )
 
 node_indices_lps3 = list(range(p_lps3))
 circ = [i*2*np.pi/p_lps3 for i in node_indices_lps3]
@@ -221,7 +256,9 @@ x = (x - np.mean(x)) / (scale - np.mean(x))
 y = (y - np.mean(y)) / (scale - np.mean(y))
 
 graph_layout = dict(zip(node_indices_lps3, zip(x, y)))
-graph_renderer_lps3.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+graph_renderer_lps3.layout_provider = StaticLayoutProvider(
+    graph_layout=graph_layout
+    )
 
 plot_lps3.renderers.append(graph_renderer_lps3)
 
@@ -235,12 +272,12 @@ tab_lps3 = Panel(child=layout_lps3, title='LPS3')
 
 
 ######################################################################
-###
-### Paley graph
-###
+# Paley graph
 ######################################################################
 
-eligible_primes_paley = [sympy.prime(i) for i in range(3, 36) if sympy.prime(i) % 4 == 1]
+eligible_primes_paley = [
+    sympy.prime(i) for i in range(3, 36) if sympy.prime(i) % 4 == 1
+    ]
 
 # Slider to select p
 p_select_paley = Slider(start=1,
@@ -262,13 +299,17 @@ src_paley = make_dataset_paley(p_paley, div_paley)
 
 plot_paley = Plot(plot_width=600,
                   plot_height=600,
-                  x_range=Range1d(-1.1,1.1),
-                  y_range=Range1d(-1.1,1.1)
+                  x_range=Range1d(-1.1, 1.1),
+                  y_range=Range1d(-1.1, 1.1)
                   )
 
 plot_paley.title.text = 'Paley dense expander graphs'
 G_paley = nx.from_pandas_edgelist(pd.DataFrame(src_paley.data))
-graph_renderer_paley = from_networkx(G_paley, nx.circular_layout, scale=1, center=(0,0))
+graph_renderer_paley = from_networkx(G_paley,
+                                     nx.circular_layout,
+                                     scale=1,
+                                     center=(0, 0)
+                                     )
 
 node_indices_paley = list(range(p_paley))
 circ = [i*2*np.pi/p_paley for i in node_indices_paley]
@@ -279,7 +320,9 @@ x = (x - np.mean(x)) / (scale - np.mean(x))
 y = (y - np.mean(y)) / (scale - np.mean(y))
 
 graph_layout = dict(zip(node_indices_paley, zip(x, y)))
-graph_renderer_paley.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+graph_renderer_paley.layout_provider = StaticLayoutProvider(
+    graph_layout=graph_layout
+    )
 
 plot_paley.renderers.append(graph_renderer_paley)
 
@@ -293,9 +336,7 @@ tab_paley = Panel(child=layout_paley, title='Paley')
 
 
 ######################################################################
-###
-### Margulis 8-regular
-###
+# Margulis 8-regular
 ######################################################################
 
 # Slider to select p
@@ -304,7 +345,7 @@ m_select_margulis = Slider(start=2,
                            step=1,
                            value=5,
                            title='Square root of the number of nodes'
-                       )
+                           )
 
 # Update the plot when graph is changed
 m_select_margulis.on_change('value', update_margulis)
@@ -317,13 +358,17 @@ src_margulis = make_dataset_margulis(m_margulis, div_margulis)
 
 plot_margulis = Plot(plot_width=600,
                      plot_height=600,
-                     x_range=Range1d(-1.1,1.1),
-                     y_range=Range1d(-1.1,1.1)
+                     x_range=Range1d(-1.1, 1.1),
+                     y_range=Range1d(-1.1, 1.1)
                      )
 
 plot_margulis.title.text = 'Margulis 8-regular graphs'
 G_margulis = nx.from_pandas_edgelist(pd.DataFrame(src_margulis.data))
-graph_renderer_margulis = from_networkx(G_margulis, nx.circular_layout, scale=1, center=(0,0))
+graph_renderer_margulis = from_networkx(G_margulis,
+                                        nx.circular_layout,
+                                        scale=1,
+                                        center=(0, 0)
+                                        )
 
 node_indices_margulis = list(range(m_margulis ** 2))
 circ = [i*2*np.pi/(m_margulis**2) for i in node_indices_margulis]
@@ -334,7 +379,9 @@ x = (x - np.mean(x)) / (scale - np.mean(x))
 y = (y - np.mean(y)) / (scale - np.mean(y))
 
 graph_layout = dict(zip(node_indices_margulis, zip(x, y)))
-graph_renderer_margulis.layout_provider = StaticLayoutProvider(graph_layout=graph_layout)
+graph_renderer_margulis.layout_provider = StaticLayoutProvider(
+    graph_layout=graph_layout
+    )
 
 plot_margulis.renderers.append(graph_renderer_margulis)
 
@@ -347,7 +394,7 @@ layout_margulis = row(controls_margulis, plot_margulis)
 tab_margulis = Panel(child=layout_margulis, title='Margulis')
 
 
-### ALL TABS TOGETHER
+# ALL TABS TOGETHER
 tabs = Tabs(tabs=[tab_lps3, tab_paley, tab_margulis])
 
 curdoc().add_root(tabs)
